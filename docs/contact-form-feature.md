@@ -12,14 +12,14 @@
 
 ## 2. Бізнес-контекст
 
-**Invented, не підтверджено.** Наведені нижче ціль, метрика й обмеження походять із навчальної розмови від імені Фундації. [Коментар Business context](https://github.com/denterra/sdd-workshop-DenisT/issues/2#issuecomment-7009184390)
+**Invented, не підтверджено.** У навчальній розмові роль представника Фундації виконував ШІ-агент. Фундація не підтверджувала ці відповіді. [Коментар Business context](https://github.com/denterra/sdd-workshop-DenisT/issues/2#issuecomment-7009184390)
 
 - **Ціль.** Дати працівнику достатньо матеріалів для першої змістовної відповіді без додаткового листування.
 - **Метрика.** За перші 30 днів після запуску щонайменше 80% усіх контактних звернень отримують першу змістовну відповідь без повторного запиту на телефон чи матеріали.
 - **Доступ і сповіщення.** Запропоновано обмежити доступ до телефону та PDF працівниками, які опрацьовують звернення. У сповіщенні пропонується показувати наявність файлу та посилання на приватне звернення. Формат доставки й ролі потребують рішення за Q-03 і Q-05.
 - **Зберігання.** Запропонований строк видалення телефону й вкладення — 90 днів після закриття звернення. Подію закриття та перелік копій потрібно погодити за Q-06.
 
-5 МБ — робоче припущення з блоку 5. Максимальний розмір одного PDF і точне значення межі в байтах має підтвердити Фундація (Q-01). [Аналіз впливу](https://github.com/denterra/sdd-workshop-DenisT/issues/2#issuecomment-7087264834)
+В оригіналі Фундація просить дозволити додавати документ (резюме або портфоліо). Обмеження «лише PDF» задано в блоці 5 вправи. 5 МБ — робоче припущення з блоку 5. Максимальний розмір одного PDF і точне значення межі в байтах має підтвердити Фундація (Q-01). [Аналіз впливу](https://github.com/denterra/sdd-workshop-DenisT/issues/2#issuecomment-7087264834)
 
 ## 3. Користувацькі історії
 
@@ -70,7 +70,7 @@ sequenceDiagram
             else Пошта відхилила лист
                 Mail-->>API: Відмовлено у прийманні
                 API-->>Form: Помилка надсилання
-                Form-->>Visitor: Показує помилку й дозволяє повторити
+                Form-->>Visitor: Показує помилку (повторне надсилання залежить від Q-04)
             end
         end
     end
@@ -107,14 +107,14 @@ sequenceDiagram
 
 ### Контактна форма
 
-Each run uses otherwise valid input and checked consent unless the scenario varies that input. Error names refer to the EN/UK copy table. Run validation examples separately. AC-05, AC-06 and AC-19 can be executed at the exact boundary once L is agreed.
+Each run uses otherwise valid input and checked consent unless the scenario varies that input. Error names refer to the EN/UK copy table. Run validation examples separately. Block 5 of the workshop specifies PDF as the only accepted file type. This is the source for AC-05, AC-07, AC-20 and AC-21. AC-05, AC-06 and AC-19 can be executed at the exact boundary once L is agreed.
 
 | ID | Given … When … Then … | Related RULE-ID |
 |---|---|---|
 | AC-01 | **Given** the phone field is empty (untouched or cleared), **When** the visitor submits the contact form, **Then** the required-phone error appears beside the phone field. | RULE-04, RULE-07, RULE-15 |
 | AC-02 | **Given** a contact request has a missing, empty or whitespace-only phone field, **When** the API receives it, **Then** the API rejects it with a phone-field validation error. | RULE-04, RULE-16 |
 | AC-03 | **Given** a valid PDF is selected and the contact phone field contains the incomplete number `+380 (63) 116-46`, **When** the visitor submits, **Then** the phone-format error appears beside the field. | RULE-05, RULE-15 |
-| AC-04 | **Given** the visitor entered `+380 (63) 116-4627` and selected no file, **When** the Foundation opens the resulting contact notification, **Then** the notification contains the submitted name, reply email, normalized phone `+380631164627` and message. | RULE-04, RULE-05, RULE-11, RULE-12 |
+| AC-04 | *Proposed phone disclosure in the notification, pending Q-05.* **Given** the visitor entered `+380 (63) 116-4627` and selected no file, **When** the Foundation opens the resulting contact notification, **Then** the notification contains the submitted name, reply email, normalized phone `+380631164627` and message. | RULE-04, RULE-05, RULE-11, RULE-12 |
 | AC-05 | **Given** the visitor selects one genuine PDF declared as `application/pdf` (test sizes: L − 1 and L bytes), **When** they submit the contact form, **Then** the contact submission is accepted. | RULE-10, RULE-16 |
 | AC-06 | **Given** the selected PDF is L + 1 bytes, **When** the visitor attempts submission, **Then** the file-size error appears beside the file field. | RULE-07, RULE-10 |
 | AC-07 | **Given** the selected file has MIME type `image/png`, **When** the visitor attempts submission, **Then** the PDF-only error appears beside the file field. | RULE-07, RULE-10 |
@@ -129,8 +129,8 @@ Each run uses otherwise valid input and checked consent unless the scenario vari
 | AC-20 | **Given** a direct contact request declares an attachment as `image/png`, **When** the API receives it, **Then** the API rejects it with a file-type validation error. | RULE-10, RULE-16 |
 | AC-21 | **Given** a plain-text file is named `cv.pdf` and declared as `application/pdf`, **When** the contact API receives it, **Then** the API rejects it with a file-type validation error. | RULE-10, RULE-16 |
 | AC-22 | **Given** one contact request is already pending, **When** the visitor clicks submit again, **Then** the submission request count stays at one. | RULE-10, RULE-14 |
-| AC-23 | **Given** a contact submission with a valid phone fails, **When** the visitor returns to the form, **Then** the submit button is available for retry. | RULE-09, RULE-14 |
-| AC-24 | **Given** a contact submission with a valid phone fails, **When** the visitor returns to the form, **Then** the name, email, phone and message fields still contain their submitted values. | RULE-04, RULE-09 |
+| AC-23 | *Proposed retry behavior, pending Q-04.* **Given** a contact submission with a valid phone fails, **When** the visitor returns to the form, **Then** the submit button is available for retry. | RULE-09, RULE-14 |
+| AC-24 | *Proposed field retention after failure, pending Q-04.* **Given** a contact submission with a valid phone fails, **When** the visitor returns to the form, **Then** the name, email, phone and message fields still contain their submitted values. | RULE-04, RULE-09 |
 | AC-25 | **Given** the mail service has rejected the contact request, **When** the form receives the failure response, **Then** the success confirmation remains hidden. | RULE-09, RULE-12 |
 | AC-26 | **Given** a contact submission has a missing phone or invalid attachment, **When** the API rejects it, **Then** the test mailbox receives zero notifications for that submission. | RULE-04, RULE-10, RULE-12, RULE-16 |
 | AC-27 | **Given** the visitor left the phone field empty, selected an oversized PDF, selected a PNG or left consent unchecked (one case per run), **When** they try to submit the contact form, **Then** the browser makes zero submission requests. | RULE-04, RULE-06, RULE-10 |
@@ -210,8 +210,8 @@ Each run uses otherwise valid input and checked consent unless the scenario vari
 | Телефон на клієнті й сервері · `ContactForm.tsx`, `useHandlePhoneInput.ts`, `validateContactData.ts`, `app/constants/validation.ts` | змінена | високий | У контактному сценарії відхиляти відсутній і порожній номер, зокрема після очищення поля. Зберегти чинну маску й перевірку формату. | Очистити валідний телефон і спробувати надіслати форму. Окремо перевірити прямі API-запити без поля, з порожнім, неповним і валідним номером. | RULE-04, RULE-05, RULE-15, RULE-16 |
 | Перевірка PDF на клієнті й сервері · `ContactForm.tsx`, `app/validators/blob.schema.ts`, нова перевірка вкладення | нова | високий | Після відповіді на Q-01 винести погоджену межу в байтах у спільну константу. UI перевіряє тип і розмір. API також перевіряє вміст файлу. Наявна схема містить PDF серед кількох MIME-типів і не встановлює ліміт 5 МБ. | Без файлу та з PDF рівно на межі — успіх. На один байт понад межу або з іншим вмістом під назвою `.pdf` — відмова API до надсилання листа. | RULE-10, RULE-16 |
 | Маршрут і формат запиту · `OfferCollaborationForm.tsx`, `app/api/contact/route.ts`, `app/api/collaboration/route.ts` | змінена | високий | Рекомендований варіант — спрямувати «Контакти» на `/api/contact` і приймати поля та файл через `multipart/form-data`. Зараз форма надсилає JSON на `/api/collaboration`. У відповіді повертати результат операції без вмісту CV. | Надіслати звернення з кожної сторінки. Контактне передає файл на обраний маршрут, партнерське й далі приймає попередній JSON. | RULE-10, RULE-16, RULE-17 |
-| Результат надсилання · `OfferCollaborationForm.tsx`, `ContactForm.tsx` | змінена | високий | Передавати помилку API з обгортки до форми. Показувати підтвердження після успішної відповіді. При збої зберігати введені дані та дозволяти повторну спробу. | Імітувати відмову пошти. Користувач бачить помилку, дані залишаються у формі, повторне натискання під час запиту заблоковане. | RULE-09, RULE-12, RULE-14, RULE-16 |
-| Пошта · `app/services/email/emailService.ts`, `app/services/email/emails/emails.ts` | змінена | високий | Підключити реальне надсилання з контактного маршруту. Для вкладення передати байти PDF поштовому провайдеру. Для посилання додати його в HTML і текстову версію листа. | У тестовій скриньці відкрити надісланий PDF або скачати його за посиланням і звірити вміст. Окремо перевірити лист із телефоном без файлу. | RULE-10, RULE-11, RULE-12, RULE-18 |
+| Результат надсилання · `OfferCollaborationForm.tsx`, `ContactForm.tsx` | змінена | високий | Передавати помилку API з обгортки до форми. Показувати підтвердження після успішної відповіді. За Q-04 погодити, чи зберігати введені дані й дозволяти повторну спробу. | Імітувати відмову пошти. Перевірити повідомлення про помилку. Якщо Фундація обере повторну спробу, перевірити AC-23 і AC-24. | RULE-09, RULE-12, RULE-14, RULE-16 |
+| Пошта · `app/services/email/emailService.ts`, `app/services/email/emails/emails.ts` | змінена | високий | Підключити реальне надсилання з контактного маршруту. Для вкладення передати байти PDF поштовому провайдеру. Для посилання додати його в HTML і текстову версію листа. | У тестовій скриньці відкрити надісланий PDF або скачати його за посиланням і звірити вміст. Окремо перевірити лист без файлу; показ номера в листі залежить від Q-05. | RULE-10, RULE-11, RULE-12, RULE-18 |
 | Приватне сховище та видача за посиланням · `app/services/upload/upload.ts`, `app/api/blob-url/route.ts` | нова | високий | Потрібно для варіанта з посиланням. Сервіс зареєстрований у контейнері залежностей, але його методи викликають лише тести. Запис і видалення — демозаглушки. Для CV можна повторно використати цей сервіс, реалізувавши приватне збереження та контрольований доступ. Чинний демомаршрут читає з `public`. | Одержувач відкриває правильний PDF. Після завершення погодженого строку доступу посилання більше не видає документ. | RULE-10, RULE-11, RULE-13 |
 | Локалізація й помилки · `i18n/messages/uk.json`, `i18n/messages/en.json`, `app/constants/errors.ts` | змінена | низький | Додати підписи й повідомлення для обов’язкового телефону, необов’язкового PDF, перевищення розміру, неприйнятного формату та збою надсилання. | В обох локалях перевірити підпис поля та викликати кожну помилку. Для порожнього й некоректного телефону показуються різні підказки. | RULE-04, RULE-07, RULE-08, RULE-10, RULE-16 |
 | Моделі БД і репозиторії звернень | нова | середній | Умовно, якщо Фонд погодить облік заявок або метаданих файлів. Поточний маршрут не записує звернення в MongoDB. PDF безпосередньо в листі можна надіслати без нової моделі. | Для поштового сценарію перевірити доставку без запису заявки в БД. Якщо вводиться облік — перевірити збереження звернень із файлом і без нього. | RULE-10, RULE-13 |
